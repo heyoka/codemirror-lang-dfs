@@ -1,26 +1,110 @@
-@top Program { expression* }
+@precedence {
+  function @right,
+  chain @left,
+  identifier @left,
+  duration @left
+}
+
+@top Script { statement+ }
 
 @skip { space | LineComment }
 
-expression {
-  Identifier |
-  String |
-  Boolean |
-  Application { "(" expression* ")" }
+statement {
+  Declaration |
+  expression
 }
 
+Declaration { DEF Identifier "=" expression }
+
+expression {
+    Chain |
+    primaryExpr |
+    "[" Parameters "]"
+}
+
+primary {
+    !duration Duration |
+    Float |
+    Int |
+    String |
+    Boolean |
+    Identifier |
+    Reference |
+    Operator
+}
+
+Parameters {
+    primaryExpr ("," primaryExpr)* |
+    "[" primaryExpr ("," primaryExpr)* "]"
+}
+
+primaryExpr {
+  primary |
+   Lambda primaryExpr |
+    Expr primaryExpr |
+    Operator Function |
+    Function primaryExpr //|
+    //Primary Operator primaryExpr |
+}
+
+Function {
+   !function ( Identifier !function "(" ) Parameters* ( ")" )
+}
+
+Chain {
+   !chain UserNode  Identifier "(" (Parameters)* ")" NodeParam* (Chain)* |
+    Macro !chain Identifier "(" (Parameters)* ")" NodeParam* (Chain)* |
+    Node !chain Identifier "(" (Parameters)* ")" NodeParam* (Chain)*
+}
+
+NodeParam {
+  Dot !chain Identifier "(" (Parameters)* ")"
+}
+
+
 @tokens {
-  Identifier { $[a-zA-Z_\-0-9]+ }
 
-  String { '"' (!["\\] | "\\" _)* '"' }
+Node { "|" }
+Macro { "||" }
+UserNode { "@" }
+Dot { "." }
 
-  Boolean { "#t" | "#f" }
+DEF { "def" }
+Lambda { "lambda:" }
+Expr { "e:" }
 
-  LineComment { ";" ![\n]* }
+  Duration { ( "+"|"-" )? ( "0" | $[1-9] )+ $[0-9]* ( "m" | "ms" | "s" | "h" | "d" | "w" ) }
+  Int { ("0" | $[1-9])+ $[0-9]* }
+  Float { $[0-9]+ Dot+ $[0-9]+ }
+  Identifier { $[a-zA-Z_]+ $[a-zA-Z_0-9\\]* }
+  Operator { ("+"|"-"|"*"|"/"|"=="|"!="|"<"|"<="|">"|">="|"=~"|"!~"|"not"|"AND"|"OR"|"div"|"rem") }
 
+
+  StringTemplate { "{{" Identifier "}}" }
+  String { "'" (!['] | "''" | StringTemplate)* "'" }
+  Reference { ('"') ( Identifier | Dot | "[" | "]" )+ ('"') }
+
+  Boolean { "true" | "false" }
+
+
+  LineComment { ("%") ![\n]* }
+
+  @precedence {
+    Node, Macro, UserNode, Dot, DEF, Lambda, Expr,
+      LineComment,
+    Int,
+      Float,
+    Identifier,
+      Boolean,
+    Duration,
+    Operator,
+
+
+      Reference,
+      String}
   space { $[ \t\n\r]+ }
 
-  "(" ")"
+
 }
 
 @detectDelim

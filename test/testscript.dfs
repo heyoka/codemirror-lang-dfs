@@ -1,0 +1,32 @@
+def sql =
+'
+SELECT * FROM was i ned WHERE data_obj[''fieldz''] = 13  LIMIT 2
+'
+def house = 'meins'
+def text_templ = 'string {{sql}} other string'
+def bool = true
+def paramf = e: str_concat([house, 'somestring', '_', string(house)])
+def expression = lambda: (round("hal3" / 2)) + float(house)
+def number = e: round(243.3 / 2)
+
+|nodeName('node-fun-param')
+.as('node-parm')
+.get(772)
+.lambda(lambda: now() - "ts")
+.fields('a.b', 'c.d', 'e', 'z.a[1]')
+
+% some comment here
+
+def topic = 'my/refect/topic/v1'
+def out =
+|mqtt_publish()
+.topic(topic)
+||mymacro()
+.count(3)
+@python_node_1()
+.treshold(44.5)
+
+out
+|amqp_publish()
+.exchange('x_lm_fanout')
+.routing_key(e: str_replace(topic, '/', '.'))
