@@ -19,3 +19,8 @@ Things you'll need to do (see the [language support example](https://codemirror.
  * Optionally add a license.
 
  * Publish. If you want to use a `@codemirror/lang-...` package name, open an [issue](https://github.com/codemirror/codemirror.next/issues) to ask for npm publish rights for that name.
+
+
+[code_sandbox](https://codesandbox.io/examples/package/@codemirror/next)
+
+[lezer_sandbox](https://lezer-sandbox-1gurlbleb-a61.vercel.app/)
