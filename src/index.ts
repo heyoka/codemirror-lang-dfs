@@ -16,6 +16,7 @@ export const DFSLanguage = LRLanguage.define({
         Boolean: t.bool,
         Float: t.float,
         Int: t.integer,
+        Duration: t.atom,
         Operator: t.operator,
         String: t.string,
         Reference: t.strong,

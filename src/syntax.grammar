@@ -1,8 +1,13 @@
 @precedence {
+  lambda @right,
+  expr @right,
   function @right,
-  chain @left,
-  identifier @left,
-  duration @left
+  params @right,
+  node @left,
+  nodeparam @left,
+  duration @left,
+  primaryEx @left
+
 }
 
 @top Script { statement+ }
@@ -14,12 +19,16 @@ statement {
   expression
 }
 
-Declaration { DEF Identifier "=" expression }
+Declaration { definition "=" expression }
+
+definition {
+  DEF Identifier
+}
 
 expression {
-    Chain |
-    primaryExpr |
-    "[" Parameters "]"
+  Node |
+  !node Identifier Node |
+  primaryExpr
 }
 
 primary {
@@ -30,55 +39,65 @@ primary {
     Boolean |
     Identifier |
     Reference |
-    Operator
+    Operator |
+  Function |
+  !lambda Lambda |
+  !expr Expr
 }
 
 Parameters {
-    primaryExpr ("," primaryExpr)* |
+    !params primaryExpr ("," primaryExpr)* |
     "[" primaryExpr ("," primaryExpr)* "]"
 }
 
 primaryExpr {
-  primary |
-   Lambda primaryExpr |
-    Expr primaryExpr |
-    Operator Function |
-    Function primaryExpr //|
-    //Primary Operator primaryExpr |
+  !primaryEx  primary !primaryEx (primary)* |
+  !primaryEx "(" primary !primaryEx (primary)* ")"
 }
 
 Function {
-   !function ( Identifier !function "(" ) Parameters* ( ")" )
+   !function ( Identifier !function "(" ) Parameters ( ")" ) |
+  !function Identifier !function "(" ")"
 }
 
-Chain {
-   !chain UserNode  Identifier "(" (Parameters)* ")" NodeParam* (Chain)* |
-    Macro !chain Identifier "(" (Parameters)* ")" NodeParam* (Chain)* |
-    Node !chain Identifier "(" (Parameters)* ")" NodeParam* (Chain)*
+Expr {
+  !expr kwExpr primaryExpr+ |
+  !expr kwExpr ( "(" primaryExpr ")" )+
+}
+
+Lambda {
+  !lambda kwLambda !lambda primaryExpr+ primaryExpr* |
+  !lambda kwLambda ( "(" primaryExpr ")" primaryExpr* )+
+}
+
+
+Node {
+   !node UserNode  Identifier "(" (Parameters)* ")" NodeParam*   |
+    !node Macro  Identifier "(" (Parameters)* ")" NodeParam*  |
+    !node kwNode !node Identifier "(" (Parameters)* ")" NodeParam*
 }
 
 NodeParam {
-  Dot !chain Identifier "(" (Parameters)* ")"
+  Dot Identifier "(" (Parameters)* ")"
 }
 
 
 @tokens {
 
-Node { "|" }
+kwNode { "|" }
 Macro { "||" }
 UserNode { "@" }
 Dot { "." }
 
 DEF { "def" }
-Lambda { "lambda:" }
-Expr { "e:" }
+kwLambda { "lambda:" }
+kwExpr { "e:" }
 
   Duration { ( "+"|"-" )? ( "0" | $[1-9] )+ $[0-9]* ( "m" | "ms" | "s" | "h" | "d" | "w" ) }
   Int { ("0" | $[1-9])+ $[0-9]* }
-  Float { $[0-9]+ Dot+ $[0-9]+ }
+  Float { $[0-9]+ Dot? $[0-9]+ }
   Identifier { $[a-zA-Z_]+ $[a-zA-Z_0-9\\]* }
   Operator { ("+"|"-"|"*"|"/"|"=="|"!="|"<"|"<="|">"|">="|"=~"|"!~"|"not"|"AND"|"OR"|"div"|"rem") }
-
 
   StringTemplate { "{{" Identifier "}}" }
   String { "'" (!['] | "''" | StringTemplate)* "'" }
@@ -86,22 +105,20 @@ Expr { "e:" }
 
   Boolean { "true" | "false" }
 
-
   LineComment { ("%") ![\n]* }
 
   @precedence {
-    Node, Macro, UserNode, Dot, DEF, Lambda, Expr,
-      LineComment,
+    DEF, kwNode, Macro, UserNode, Dot,  kwLambda, kwExpr,
+    LineComment,
     Int,
-      Float,
+    Float,
     Identifier,
-      Boolean,
+    Boolean,
     Duration,
     Operator,
+    Reference,
+    String}
 
-
-      Reference,
-      String}
   space { $[ \t\n\r]+ }
 
 
